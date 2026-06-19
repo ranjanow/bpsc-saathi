@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
+      # Use Docker's internal DNS to resolve the database connection.
+      # The host 'db' maps to the postgres service below.
+      - DATABASE_URL=postgres://bpsc_user:bpsc_pass@db:5432/bpsc_db?sslmode=disable
+
+      # NOTE: Provide your actual Gemini API key here or via a .env file
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: bpsc_user
+      POSTGRES_PASSWORD: bpsc_pass
+      POSTGRES_DB: bpsc_db
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persistent Docker volume ensures data isn't lost if the container restarts
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:

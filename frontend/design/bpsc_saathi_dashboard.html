@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BPSC Saathi — Dashboard Prototype (Desktop)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Roboto:wght@400;500;700;900&family=Open+Sans:wght@400;600&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700&display=swap');
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  padding: 28px 20px 60px;
+  background: #ECE7DE;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.4s ease;
+}
+body[data-theme="dark"] { background: #050507; }
+body[data-theme="professional"] { background: #E4E9F2; }
+
+.intro { max-width: 640px; text-align: center; }
+.intro h1 {
+  font-size: 22px;
+  margin: 0 0 6px;
+  color: #2B2118;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  transition: color 0.4s ease;
+}
+body[data-theme="dark"] .intro h1 { color: #F1EFFB; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+body[data-theme="professional"] .intro h1 { color: #16203A; font-family: 'Roboto', sans-serif; font-weight: 900; }
+
+.switcher { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.switcher button {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1.5px solid #D8CDBE;
+  background: #FFFFFF;
+  color: #6B5D4F;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.switcher button.active { background: #2B2118; border-color: #2B2118; color: #FFFBF4; }
+body[data-theme="dark"] .switcher button { border-color: #2A2A38; background: #17171F; color: #9A93B5; }
+body[data-theme="dark"] .switcher button.active { background: #BB86FC; border-color: #BB86FC; color: #1A0F2E; }
+body[data-theme="professional"] .switcher button { border-color: #CDD6E8; background: #FFFFFF; color: #5A6580; }
+body[data-theme="professional"] .switcher button.active { background: #2F4FCF; border-color: #2F4FCF; color: #FFFFFF; }
+
+.theme-desc {
+  max-width: 640px;
+  text-align: center;
+  font-size: 13px;
+  color: #8A7B6C;
+  line-height: 1.6;
+  min-height: 20px;
+}
+body[data-theme="dark"] .theme-desc { color: #8E89A8; }
+body[data-theme="professional"] .theme-desc { color: #748098; }
+
+.app-shell {
+  width: 100%;
+  max-width: 1240px;
+  display: flex;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.16);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  transition: background 0.4s ease, color 0.4s ease;
+  min-height: 760px;
+}
+
+.app-shell[data-theme="vibrant"] {
+  --bg: #FFFBF4; --surface: #FFFFFF; --surface-alt: #FFF1E2;
+  --sidebar: #FFFFFF; --text: #2B2118; --text-muted: #A6927E;
+  --primary: #FF7A45; --primary-soft: #FFE2D2;
+  --secondary: #00A896; --secondary-soft: #D7F5F0;
+  --accent: #FFC107; --border: #F1E4D4; --radius: 18px;
+  --font-display: 'Baloo 2', sans-serif; --font-body: 'Inter', sans-serif;
+  --shadow: 0 10px 24px rgba(255,122,69,0.10);
+}
+.app-shell[data-theme="professional"] {
+  --bg: #F3F6FB; --surface: #FFFFFF; --surface-alt: #EAF0FC;
+  --sidebar: #16203A; --text: #16203A; --text-muted: #7C88A3;
+  --primary: #2F4FCF; --primary-soft: #E3E9FC;
+  --secondary: #1AA1E0; --secondary-soft: #DFF3FC;
+  --accent: #2F4FCF; --border: #E2E8F4; --radius: 10px;
+  --font-display: 'Roboto', sans-serif; --font-body: 'Open Sans', sans-serif;
+  --shadow: 0 8px 20px rgba(47,79,207,0.06);
+}
+.app-shell[data-theme="dark"] {
+  --bg: #0D0D12; --surface: #17171F; --surface-alt: #1E1E2A;
+  --sidebar: #0A0A0E; --text: #F1EFFB; --text-muted: #8E89A8;
+  --primary: #BB86FC; --primary-soft: #271E3D;
+  --secondary: #03DAC6; --secondary-soft: #16302D;
+  --accent: #FF4D9D; --border: #2A2A38; --radius: 14px;
+  --font-display: 'JetBrains Mono', monospace; --font-body: 'Inter', sans-serif;
+  --shadow: 0 0 0 1px var(--border);
+}
+
+.sidebar {
+  width: 240px; flex-shrink: 0; background: var(--sidebar);
+  border-right: 1px solid var(--border); display: flex;
+  flex-direction: column; padding: 24px 18px; gap: 28px;
+}
+.app-shell[data-theme="professional"] .sidebar,
+.app-shell[data-theme="dark"] .sidebar { border-right: none; }
+
+.brand { display: flex; align-items: center; gap: 10px; padding: 0 6px; }
+.brand .diya { width: 30px; height: 38px; flex-shrink: 0; overflow: visible; }
+.brand-name {
+  font-family: var(--font-display); font-size: 16px; font-weight: 800; color: var(--text);
+}
+.app-shell[data-theme="professional"] .brand-name,
+.app-shell[data-theme="dark"] .brand-name { color: var(--bg); }
+.app-shell[data-theme="dark"] .brand-name { color: var(--text); }
+
+.nav-list { display: flex; flex-direction: column; gap: 4px; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px; padding: 11px 12px;
+  border-radius: var(--radius); font-size: 14px; font-weight: 600;
+  color: var(--text-muted); border-left: 3px solid transparent; cursor: default;
+}
+.app-shell[data-theme="professional"] .nav-item,
+.app-shell[data-theme="dark"] .nav-item { color: var(--text-muted); }
+.nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+.nav-item.active {
+  color: var(--primary); background: var(--primary-soft);
+  border-left-color: var(--primary);
+}
+
+.sidebar-footer {
+  margin-top: auto; padding: 14px; border-radius: var(--radius);
+  background: var(--surface-alt); display: flex;
+  align-items: center; justify-content: space-between;
+}
+.app-shell[data-theme="professional"] .sidebar-footer,
+.app-shell[data-theme="dark"] .sidebar-footer { background: rgba(255,255,255,0.05); }
+.sidebar-footer .streak-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.sidebar-footer .streak-count { font-family: var(--font-display); font-size: 20px; font-weight: 800; color: var(--text); }
+
+.diya .bowl { fill: var(--primary-soft); stroke: var(--primary); stroke-width: 2; }
+.diya .flame-outer { fill: var(--accent); transform-origin: 16px 26px; animation: flicker 2.4s ease-in-out infinite; }
+.diya .flame-inner { fill: var(--primary); transform-origin: 16px 24px; animation: flicker 1.8s ease-in-out infinite reverse; }
+.app-shell[data-theme="dark"] .diya .flame-outer,
+.app-shell[data-theme="dark"] .diya .flame-inner { filter: drop-shadow(0 0 5px var(--accent)); }
+@keyframes flicker {
+  0%, 100% { transform: scaleY(1) scaleX(1) rotate(0deg); }
+  50% { transform: scaleY(1.08) scaleX(0.94) rotate(-1.5deg); }
+}
+
+.main { flex: 1; min-width: 0; padding: 28px 32px 32px; display: flex; flex-direction: column; gap: 22px; }
+
+.topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.topbar .greeting .eyebrow {
+  display: block; font-size: 12px; font-weight: 600;
+  color: var(--text-muted); text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: 4px;
+}
+.topbar .greeting h2 {
+  margin: 0; font-family: var(--font-display);
+  font-size: 30px; font-weight: 800; line-height: 1.1;
+}
+
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.xp-pill {
+  font-family: var(--font-display); font-size: 13px; font-weight: 700;
+  padding: 8px 16px; border-radius: 999px;
+  background: var(--secondary-soft); color: var(--secondary); white-space: nowrap;
+}
+.avatar-circle {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--primary-soft); color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; font-family: var(--font-display);
+}
+
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.section-title {
+  font-family: var(--font-display); font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-muted); margin: 0 0 12px;
+}
+
+.hero-quiz {
+  padding: 28px 32px; display: flex; align-items: center;
+  justify-content: space-between; gap: 24px;
+  background: linear-gradient(120deg, var(--primary-soft) 0%, var(--surface) 65%);
+}
+.app-shell[data-theme="dark"] .hero-quiz { background: var(--surface); border: 1px solid var(--primary); }
+.hero-quiz .eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--primary); margin: 0 0 8px;
+}
+.hero-quiz h3 {
+  font-family: var(--font-display); font-size: 28px; font-weight: 800;
+  margin: 0 0 6px; line-height: 1.2;
+}
+.hero-quiz p { font-size: 14px; color: var(--text-muted); margin: 0; }
+.hero-quiz .hero-right { display: flex; flex-direction: column; align-items: flex-end; gap: 14px; flex-shrink: 0; }
+.cta {
+  font-family: var(--font-body); font-size: 14px; font-weight: 700;
+  border: none; cursor: pointer; padding: 13px 26px;
+  border-radius: var(--radius); background: var(--primary);
+  color: var(--bg); display: inline-flex; align-items: center;
+  gap: 8px; white-space: nowrap;
+}
+
+.content-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+.content-left, .content-right { display: flex; flex-direction: column; gap: 20px; }
+
+.subjects-card { padding: 20px; }
+.subject-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.subject-tile {
+  padding: 14px; display: flex; flex-direction: column; gap: 10px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+}
+.subject-tile .icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-alt); color: var(--primary);
+}
+.subject-tile .name { font-size: 13px; font-weight: 600; }
+.subject-tile .progress-track { height: 5px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.subject-tile .progress-fill { height: 100%; border-radius: 999px; background: var(--secondary); }
+.subject-tile .pct { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+
+.countdown-card { padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.ring-bg { fill: none; stroke: var(--border); stroke-width: 8; }
+.ring-fg { fill: none; stroke: var(--primary); stroke-width: 8; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50px 50px; }
+.ring-label { font-family: var(--font-display); font-size: 18px; font-weight: 800; fill: var(--text); }
+.ring-sub { font-size: 9px; fill: var(--text-muted); font-family: var(--font-body); }
+.countdown-card strong { font-family: var(--font-display); font-size: 18px; display: block; margin-top: 8px; }
+.countdown-card span { font-size: 13px; color: var(--text-muted); display: block; }
+.countdown-card .syllabus { color: var(--secondary); font-weight: 600; margin-top: 4px; }
+
+.leaderboard-card { padding: 20px; }
+.leaderboard-list { display: flex; flex-direction: column; gap: 2px; }
+.lb-row { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: calc(var(--radius) - 6px); }
+.lb-row.me { background: var(--secondary-soft); }
+.lb-rank { font-family: var(--font-display); font-size: 13px; font-weight: 800; width: 18px; color: var(--text-muted); }
+.lb-row.me .lb-rank { color: var(--secondary); }
+.lb-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--primary-soft); color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; font-family: var(--font-display);
+}
+.lb-name { flex: 1; font-size: 13px; font-weight: 600; }
+.lb-xp { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+
+@media (max-width: 980px) {
+  .content-grid { grid-template-columns: 1fr; }
+  .content-right { flex-direction: row; }
+  .content-right > * { flex: 1; }
+}
+@media (max-width: 760px) {
+  .app-shell { flex-direction: column; min-height: auto; }
+  .sidebar { width: 100%; flex-direction: row; align-items: center; padding: 16px 18px; gap: 16px; overflow-x: auto; }
+  .nav-list { flex-direction: row; gap: 4px; }
+  .nav-item span { display: none; }
+  .sidebar-footer { margin-top: 0; flex-shrink: 0; }
+  .main { padding: 20px; }
+  .hero-quiz { flex-direction: column; align-items: flex-start; }
+  .subject-grid { grid-template-columns: repeat(2, 1fr); }
+  .content-right { flex-direction: column; }
+}
+</style>
+</head>
+<body data-theme="vibrant">
+
+<div class="intro">
+  <h1>BPSC Saathi — Dashboard (desktop)</h1>
+</div>
+
+<div class="switcher">
+  <button class="active" data-theme="vibrant">Vibrant Modern</button>
+  <button data-theme="professional">Clean Professional</button>
+  <button data-theme="dark">Dark Tech</button>
+</div>
+
+<p class="theme-desc" id="themeDesc">Energetic and warm — bright accents on cream, rounded type, friendly micro-interactions for younger aspirants.</p>
+
+<div class="app-shell" id="appShell" data-theme="vibrant">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <svg class="diya" viewBox="0 0 32 40" aria-hidden="true">
+        <ellipse class="bowl" cx="16" cy="32" rx="13" ry="5"></ellipse>
+        <path class="flame-outer" d="M16 26 C9 19 11 9 16 3 C21 9 23 19 16 26 Z"></path>
+        <path class="flame-inner" d="M16 25 C12 20 13 13 16 9 C19 13 20 20 16 25 Z"></path>
+      </svg>
+      <span class="brand-name">BPSC Saathi</span>
+    </div>
+
+    <nav class="nav-list">
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"></path><path d="M5 10v10h14V10"></path></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 012-2h11v17H6a2 2 0 01-2-2z"></path><path d="M17 3v17"></path></svg>
+        <span>Subjects</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h6l-1 8 9-12h-6z"></path></svg>
+        <span>Daily quiz</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="20" x2="5" y2="11"></line><line x1="12" y1="20" x2="12" y2="5"></line><line x1="19" y1="20" x2="19" y2="14"></line></svg>
+        <span>Progress</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="3"></circle><circle cx="18" cy="9" r="2.2"></circle><path d="M2 20c0-3.3 3-5 7-5s7 1.7 7 5"></path><path d="M15.5 12.2c2.6.4 4.5 1.7 4.5 4.3"></path></svg>
+        <span>Community</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg>
+        <span>Profile</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div>
+        <span class="streak-label">Streak</span>
+        <span class="streak-count">12 days</span>
+      </div>
+      <svg class="diya" viewBox="0 0 32 40" aria-hidden="true">
+        <ellipse class="bowl" cx="16" cy="32" rx="13" ry="5"></ellipse>
+        <path class="flame-outer" d="M16 26 C9 19 11 9 16 3 C21 9 23 19 16 26 Z"></path>
+        <path class="flame-inner" d="M16 25 C12 20 13 13 16 9 C19 13 20 20 16 25 Z"></path>
+      </svg>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="greeting">
+        <span class="eyebrow">Namaste</span>
+        <h2>Welcome back, Anjali</h2>
+      </div>
+      <div class="topbar-right">
+        <span class="xp-pill">1,240 XP</span>
+        <div class="avatar-circle">A</div>
+      </div>
+    </div>
+
+    <div class="hero-quiz card">
+      <div>
+        <p class="eyebrow">Today's challenge</p>
+        <h3>Bihar History — Round 14</h3>
+        <p>10 questions · about 6 minutes · earn 50 XP for finishing</p>
+      </div>
+      <div class="hero-right">
+        <button class="cta">
+          Start quiz
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <div class="content-left">
+        <div class="card subjects-card">
+          <h4 class="section-title">Continue learning</h4>
+          <div class="subject-grid">
+            <div class="subject-tile">
+              <div class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"></path><path d="M9 21V12h6v9"></path></svg></div>
+              <span class="name">Bihar history</span>
+              <div class="progress-track"><div class="progress-fill" style="width:72%"></div></div>
+              <span class="pct">72% complete</span>
+            </div>
+            <div class="subject-tile">
+              <div class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 9l7-6 7 6M5 21h14"></path></svg></div>
+              <span class="name">Indian polity</span>
+              <div class="progress-track"><div class="progress-fill" style="width:45%"></div></div>
+              <span class="pct">45% complete</span>
+            </div>
+            <div class="subject-tile">
+              <div class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="18" y1="20" x2="18" y2="14"></line></svg></div>
+              <span class="name">Economy</span>
+              <div class="progress-track"><div class="progress-fill" style="width:60%"></div></div>
+              <span class="pct">60% complete</span>
+            </div>
+            <div class="subject-tile">
+              <div class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><line x1="3" y1="12" x2="21" y2="12"></line><path d="M12 3a14 14 0 010 18 14 14 0 010-18"></path></svg></div>
+              <span class="name">Geography</span>
+              <div class="progress-track"><div class="progress-fill" style="width:38%"></div></div>
+              <span class="pct">38% complete</span>
+            </div>
+            <div class="subject-tile">
+              <div class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6l-5 9a2 2 0 002 3h12a2 2 0 002-3l-5-9V2"></path><line x1="9" y1="2" x2="15" y2="2"></line></svg></div>
+              <span class="name">General science</span>
+              <div class="progress-track"><div class="progress-fill" style="width:80%"></div></div>
+              <span class="pct">80% complete</span>
+            </div>
+            <div class="subject-tile">
+              <div class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1"></rect><line x1="7" y1="9" x2="17" y2="9"></line><line x1="7" y1="13" x2="17" y2="13"></line><line x1="7" y1="17" x2="12" y2="17"></line></svg></div>
+              <span class="name">Current affairs</span>
+              <div class="progress-track"><div class="progress-fill" style="width:25%"></div></div>
+              <span class="pct">25% complete</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-right">
+        <div class="card countdown-card">
+          <svg width="92" height="92" viewBox="0 0 100 100">
+            <circle class="ring-bg" cx="50" cy="50" r="42"></circle>
+            <circle class="ring-fg" cx="50" cy="50" r="42" stroke-dasharray="263.9" stroke-dashoffset="84.4"></circle>
+            <text x="50" y="48" text-anchor="middle" class="ring-label">68%</text>
+            <text x="50" y="62" text-anchor="middle" class="ring-sub">syllabus</text>
+          </svg>
+          <strong>42 days</strong>
+          <span>until BPSC Prelims</span>
+          <span class="syllabus">68% of syllabus covered</span>
+        </div>
+
+        <div class="card leaderboard-card">
+          <h4 class="section-title">This week's leaders</h4>
+          <div class="leaderboard-list">
+            <div class="lb-row">
+              <span class="lb-rank">1</span>
+              <span class="lb-avatar">RK</span>
+              <span class="lb-name">Ravi Kumar</span>
+              <span class="lb-xp">2,480 XP</span>
+            </div>
+            <div class="lb-row me">
+              <span class="lb-rank">2</span>
+              <span class="lb-avatar">A</span>
+              <span class="lb-name">You</span>
+              <span class="lb-xp">1,240 XP</span>
+            </div>
+            <div class="lb-row">
+              <span class="lb-rank">3</span>
+              <span class="lb-avatar">SK</span>
+              <span class="lb-name">Sunita K.</span>
+              <span class="lb-xp">1,180 XP</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const descriptions = {
+  vibrant: "Energetic and warm — bright accents on cream, rounded type, friendly micro-interactions for younger aspirants.",
+  professional: "Trustworthy and minimalist — navy and white, Material-style icons, built for clarity and credibility.",
+  dark: "Bold and tech-forward — dark surfaces, neon purple and teal, monospace headings for a coding-minded audience."
+};
+
+const buttons = document.querySelectorAll(".switcher button");
+const appShell = document.getElementById("appShell");
+const desc = document.getElementById("themeDesc");
+
+buttons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    const theme = btn.dataset.theme;
+    buttons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    appShell.setAttribute("data-theme", theme);
+    document.body.setAttribute("data-theme", theme);
+    desc.textContent = descriptions[theme];
+  });
+});
+</script>
+
+</body>
+</html>
