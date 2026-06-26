@@ -27,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _submitted = false;
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
 
@@ -50,6 +51,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Future<void> _handleLogin() async {
+    setState(() => _submitted = true);
     if (!_formKey.currentState!.validate()) return;
 
     final auth = context.read<AuthProvider>();
@@ -144,6 +146,9 @@ class _LoginScreenState extends State<LoginScreen>
                     ),
                     child: Form(
                       key: _formKey,
+                      autovalidateMode: _submitted
+                          ? AutovalidateMode.onUserInteraction
+                          : AutovalidateMode.disabled,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [

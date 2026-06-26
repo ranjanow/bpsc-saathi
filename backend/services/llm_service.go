@@ -729,3 +729,29 @@ Remember: respond with ONLY the JSON object.`
 	log.Printf("[DailyQuiz] ✅ Generated %d/%d PYQ questions", len(ecosystem.GeneratedQuestions), numQuestions)
 	return ecosystem, nil
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GenerateText — general-purpose text generation for AI Tutor & Mentor chat
+// ─────────────────────────────────────────────────────────────────────────────
+
+// GenerateText sends a free-form prompt to Gemini and returns the text response.
+// Used by TutorChatHandler for conversational AI interactions.
+func (s *LLMService) GenerateText(prompt string) (string, error) {
+	ctx := context.Background()
+	model := s.client.GenerativeModel(s.modelName)
+	model.SetTemperature(0.7)
+	model.SetTopP(0.9)
+
+	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
+	if err != nil {
+		return "", fmt.Errorf("GenerateText: %w", err)
+	}
+
+	text, err := extractTextFromResponse(resp)
+	if err != nil {
+		return "", fmt.Errorf("GenerateText: %w", err)
+	}
+
+	return text, nil
+}
+

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
+import '../env.dart';
 
 /// Full-featured Profile screen with backend integration.
 ///
@@ -69,7 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final profileRes = await http.get(
-        Uri.parse('http://localhost:8080/api/v1/profile'),
+        Uri.parse('${Environment.apiUrl}/api/v1/profile'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -128,7 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final res = await http.put(
-        Uri.parse('http://localhost:8080/api/v1/profile'),
+        Uri.parse('${Environment.apiUrl}/api/v1/profile'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(updates),
       );

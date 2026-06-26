@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import '../theme/app_theme.dart';
 import '../models/ecosystem_model.dart';
+import '../env.dart';
 
 /// Daily Quiz screen — serves 15 mixed-subject BPSC PYQ questions daily.
 ///
@@ -62,7 +63,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8080/api/v1/daily-quiz'),
+        Uri.parse('${Environment.apiUrl}/api/v1/daily-quiz'),
         headers: {'Content-Type': 'application/json'},
       );
 

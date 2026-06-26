@@ -457,7 +457,7 @@ class _PrelimsArenaScreenState extends State<PrelimsArenaScreen>
     } catch (e) {
       setState(() {
         _errorMessage =
-            'Could not reach the server. Is the backend running on port 8080?\n\nDetails: $e';
+            'Could not reach the server. Is the backend running?\n\nDetails: $e';
         _screenState = _ScreenState.error;
       });
     }

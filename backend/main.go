@@ -48,6 +48,8 @@ func main() {
 	var repo *repositories.EcosystemRepository
 	var bookmarkRepo *repositories.PostgresBookmarkRepository
 	var userRepo *repositories.UserRepository
+	var analyticsRepo *repositories.AnalyticsRepository
+	var featuresRepo *repositories.FeaturesRepository
 	if err := InitDB(connString); err != nil {
 		log.Printf("[DB] ⚠️  Database connection failed (running in degraded mode): %v", err)
 	} else {
@@ -55,15 +57,21 @@ func main() {
 		repo = repositories.NewEcosystemRepository(DB)
 		bookmarkRepo = repositories.NewPostgresBookmarkRepository(DB)
 		userRepo = repositories.NewUserRepository(DB)
+		analyticsRepo = repositories.NewAnalyticsRepository(DB)
+		featuresRepo = repositories.NewFeaturesRepository(DB)
 
-		// Run auth migration
+		// Run migrations
 		if err := userRepo.RunAuthMigration(); err != nil {
 			log.Printf("[DB] ⚠️  Auth migration warning: %v", err)
 		}
+		if err := analyticsRepo.RunMigration(); err != nil {
+			log.Printf("[DB] ⚠️  Analytics migration warning: %v", err)
+		}
+		if err := featuresRepo.RunMigration(); err != nil {
+			log.Printf("[DB] ⚠️  Features migration warning: %v", err)
+		}
 
-		log.Println("[DB] EcosystemRepository ready")
-		log.Println("[DB] BookmarkRepository ready")
-		log.Println("[DB] UserRepository ready")
+		log.Println("[DB] ✅ All repositories ready")
 	}
 
 	// ─────────────────────────────────────────────────────────────────────────
@@ -205,6 +213,69 @@ func main() {
 	mux.HandleFunc("/api/v1/syllabus-refresher", refresherHandler.HandleGetSyllabusRefresher)
 	mux.HandleFunc("/api/v1/mains-evaluate", mainsEvalHandler.HandleMainsEvaluation)
 	mux.HandleFunc("/api/v1/daily-quiz", dailyQuizHandler.HandleDailyQuiz)
+
+	// ── Features 2-9 routes (protected — require JWT) ──────────────────────
+	if analyticsRepo != nil && authService != nil {
+		jwtMW := handlers.JWTAuthMiddleware(authService)
+		analyticsHandler := handlers.NewAnalyticsHandler(analyticsRepo)
+
+		// F2: Analytics
+		mux.Handle("/api/v1/analytics/dashboard", jwtMW(http.HandlerFunc(analyticsHandler.HandleDashboard)))
+		mux.Handle("/api/v1/analytics/progress", jwtMW(http.HandlerFunc(analyticsHandler.HandleProgress)))
+		mux.Handle("/api/v1/analytics/streak", jwtMW(http.HandlerFunc(analyticsHandler.HandleStreak)))
+		mux.Handle("/api/v1/analytics/record-attempt", jwtMW(http.HandlerFunc(analyticsHandler.HandleRecordAttempt)))
+	}
+
+	if featuresRepo != nil && authService != nil {
+		jwtMW := handlers.JWTAuthMiddleware(authService)
+
+		// F4/F5: AI Tutor Chat + Mentor
+		tutorChatHandler := handlers.NewTutorChatHandler(llmSvc, featuresRepo)
+		mux.Handle("/api/v1/tutor-chat/sessions", jwtMW(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.Method {
+			case http.MethodGet:
+				tutorChatHandler.HandleListSessions(w, r)
+			case http.MethodPost:
+				tutorChatHandler.HandleCreateSession(w, r)
+			default:
+				http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+			}
+		})))
+		mux.Handle("/api/v1/tutor-chat/messages", jwtMW(http.HandlerFunc(tutorChatHandler.HandleGetMessages)))
+		mux.Handle("/api/v1/tutor-chat/send", jwtMW(http.HandlerFunc(tutorChatHandler.HandleSendMessage)))
+
+		// F6: Revision Engine
+		revisionHandler := handlers.NewRevisionHandler(featuresRepo)
+		mux.Handle("/api/v1/revision/today", jwtMW(http.HandlerFunc(revisionHandler.HandleGetRevisions)))
+		mux.Handle("/api/v1/revision/add", jwtMW(http.HandlerFunc(revisionHandler.HandleAddRevision)))
+		mux.Handle("/api/v1/revision/complete", jwtMW(http.HandlerFunc(revisionHandler.HandleCompleteRevision)))
+
+		// F7: Mock Tests
+		mockTestHandler := handlers.NewMockTestHandler(featuresRepo)
+		mux.HandleFunc("/api/v1/mock-tests", mockTestHandler.HandleListTests) // public listing
+		mux.Handle("/api/v1/mock-tests/detail", jwtMW(http.HandlerFunc(mockTestHandler.HandleGetTest)))
+		mux.Handle("/api/v1/mock-tests/start", jwtMW(http.HandlerFunc(mockTestHandler.HandleStartTest)))
+		mux.Handle("/api/v1/mock-tests/submit", jwtMW(http.HandlerFunc(mockTestHandler.HandleSubmitTest)))
+		mux.Handle("/api/v1/mock-tests/result", jwtMW(http.HandlerFunc(mockTestHandler.HandleGetResult)))
+
+		// F8: Study Planner
+		studyPlannerHandler := handlers.NewStudyPlannerHandler(featuresRepo, llmSvc)
+		mux.Handle("/api/v1/study-plan", jwtMW(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.Method {
+			case http.MethodGet:
+				studyPlannerHandler.HandleGetPlan(w, r)
+			case http.MethodPost:
+				studyPlannerHandler.HandleCreatePlan(w, r)
+			default:
+				http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+			}
+		})))
+		mux.Handle("/api/v1/study-plan/complete-task", jwtMW(http.HandlerFunc(studyPlannerHandler.HandleCompleteTask)))
+
+		// F9: Notes / Bookmarks v2
+		notesHandler := handlers.NewNotesHandler(featuresRepo)
+		mux.Handle("/api/v1/notes", jwtMW(http.HandlerFunc(notesHandler.HandleNotes)))
+	}
 
 	// ── Static routes (no auth, no DB) ──────────────────────────────────────
 	mux.HandleFunc("/api/v1/syllabus", handlers.HandleGetSyllabus)

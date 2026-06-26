@@ -128,30 +128,27 @@ Flutter App  ──HTTP──▶  Go API Server (8080)  ──SQL──▶  Post
 
 ## 4. Current Status
 
-- **Last Updated**: 2026-06-19T10:45:00+05:30
+- **Last Updated**: 2026-06-25T22:00:00+05:30
 - **Last Agent**: Antigravity (Claude Opus 4)
-- **Current Phase**: Phase 7 — Navigation Restructuring Complete ✅
-- **Backend Version**: 0.5.0 (Phase 6: Navigation Restructure)
+- **Current Phase**: Phase 8 — Features 2-9 Backend + API Complete ✅
+- **Backend Version**: 2.0.0 (Phase 8: Full Production Features)
 - **Blocking Issues**: None
-- **Changes Made (Phase 7)**:
-  - Restructured sidebar: HOME → SYLLABUS → PRELIMS → MAINS → DAILY QUIZ → PROFILE
-  - Removed Progress and Community screens (frontend + backend)
-  - Cleaned dashboard: removed Gateway Cards, Radar Chart, Syllabus Explorer, Bookmarks
-  - Created dedicated Syllabus screen with complete BPSC Prelims + Mains syllabus
-  - Expanded `syllabus_model.dart` with 8 subjects × full topic trees
-  - Created `backend/handlers/syllabus.go` — GET /api/v1/syllabus
-  - Created Daily Quiz feature: 15 PYQ-only questions, bilingual (Hindi+English)
-  - Created `backend/handlers/daily_quiz.go` — POST /api/v1/daily-quiz
-  - Added `GenerateDailyQuiz()` to LLM service with dedicated professor persona prompt
-  - Created Profile backend: GET/PUT /api/v1/profile, GET /api/v1/profile/stats
-  - Built full ProfileScreen with stats, editable fields, language preference
-  - Updated `api_service.dart` with getDailyQuiz(), getSyllabus(), getProfile(), updateProfile()
-  - Fixed `weakness_radar_chart.dart` — moved `RadarDataPoint` type inline
-  - 0 compile errors (flutter analyze + go build clean)
-- **Next Action**: Feature expansion
-  - Wire profile stats to real quiz completion data
-  - Add daily quiz caching (avoid re-generation on same day)
-  - Add theme switcher to mobile (currently desktop-only)
+- **Changes Made (Phase 8 — Features 2-9)**:
+  - F2: Real User Analytics — quiz tracking, study sessions, streak calc, subject mastery, dashboard aggregation
+  - F3: Daily Quiz Caching — DB-backed quiz cache (daily_quizzes table), avoids re-generation
+  - F4: AI Tutor — persistent chat with Gemini, conversation memory, BPSC-expert persona
+  - F5: AI Mentor — motivational guidance mode, shares chat infra with different system prompt
+  - F6: Smart Revision Engine — SM-2 spaced repetition, ease factor, interval calculation
+  - F7: Mock Test Engine — test CRUD, attempt tracking, scoring with negative marking, results
+  - F8: Study Planner — AI-powered plans, daily tasks, completion tracking
+  - F9: Bookmark Vault v2 — saved notes with types, subjects, tags, source references
+  - Unified migration 005_features.sql (14 new tables)
+  - AnalyticsRepository + FeaturesRepository with auto-migration
+  - 7 new handler files, 30+ new API endpoints
+  - All endpoints JWT-protected with RBAC middleware
+  - Frontend API service updated with all Feature 2-9 methods
+  - Backend: `go build ./...` clean ✅
+- **Next Action**: Frontend screens for Features 2-9 + integration testing
 
 ---
 
@@ -201,9 +198,30 @@ Flutter App  ──HTTP──▶  Go API Server (8080)  ──SQL──▶  Post
 | `frontend/test/widget_test.dart`                         | Updated  | Antigravity      |
 | `backend/handlers/daily_quiz.go`                         | Created  | Antigravity      |
 | `backend/handlers/syllabus.go`                           | Created  | Antigravity      |
-| `backend/handlers/profile.go`                            | Created  | Antigravity      |
-| `backend/models/profile.go`                              | Created  | Antigravity      |
+| `backend/handlers/profile.go`                            | Rewrite  | Antigravity      |
+| `backend/models/profile.go`                              | Cleared  | Antigravity      |
 | `backend/services/llm_service.go`                        | Updated  | Antigravity      |
+| `backend/migrations/004_auth.sql`                        | Created  | Antigravity      |
+| `backend/models/user.go`                                 | Created  | Antigravity      |
+| `backend/repositories/user_repo.go`                      | Created  | Antigravity      |
+| `backend/services/auth_service.go`                       | Created  | Antigravity      |
+| `backend/handlers/auth.go`                               | Created  | Antigravity      |
+| `frontend/lib/services/auth_service.dart`                | Created  | Antigravity      |
+| `frontend/lib/providers/auth_provider.dart`              | Created  | Antigravity      |
+| `frontend/lib/screens/login_screen.dart`                 | Created  | Antigravity      |
+| `frontend/lib/screens/signup_screen.dart`                | Created  | Antigravity      |
+| `frontend/lib/screens/forgot_password_screen.dart`       | Created  | Antigravity      |
+| `backend/migrations/005_features.sql`                    | Created  | Antigravity      |
+| `backend/repositories/analytics_repo.go`                 | Created  | Antigravity      |
+| `backend/repositories/features_repo.go`                  | Created  | Antigravity      |
+| `backend/handlers/analytics.go`                          | Created  | Antigravity      |
+| `backend/handlers/tutor_chat.go`                         | Created  | Antigravity      |
+| `backend/handlers/revision.go`                           | Created  | Antigravity      |
+| `backend/handlers/mock_tests.go`                         | Created  | Antigravity      |
+| `backend/handlers/study_planner.go`                      | Created  | Antigravity      |
+| `backend/services/llm_service.go`                        | Updated  | Antigravity      |
+| `backend/main.go`                                        | Updated  | Antigravity      |
+| `frontend/lib/services/api_service.dart`                 | Updated  | Antigravity      |
 
 ---
 
@@ -218,6 +236,8 @@ Flutter App  ──HTTP──▶  Go API Server (8080)  ──SQL──▶  Post
 - **Navigation (Mobile)**: HOME → PRELIMS → DAILY QUIZ → MAINS → PROFILE (5-item bottom bar)
 - **Theming**: 3 themes (Vibrant, Professional, Dark Tech) via `BpscThemeData` InheritedWidget
 - **Daily Quiz**: 15 PYQ-only questions, bilingual (Hindi+English), one per day
+- **Auth**: JWT access tokens (15min) + refresh tokens (7d), bcrypt hashing, RBAC roles
+- **Auth Env Vars**: `JWT_SECRET` (required in production, defaults to dev secret)
 
 ---
 

@@ -3,12 +3,24 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../env.dart';
+
 /// Authentication service — handles signup, login, token management.
 ///
 /// Stores tokens in SharedPreferences. In production on mobile,
 /// consider flutter_secure_storage for encrypted storage.
 class AuthService {
-  static const String _baseUrl = 'http://localhost:8080';
+  /// Resolves the API base URL:
+  /// 1. If API_URL is set via --dart-define, use it (production).
+  /// 2. Otherwise, auto-detect localhost for local development.
+  static final String _baseUrl = _resolveBaseUrl();
+
+  static String _resolveBaseUrl() {
+    if (Environment.apiUrl.isNotEmpty) return Environment.apiUrl;
+    // Local development auto-detection
+    return 'http://localhost:8080';
+  }
+
   static const String _accessTokenKey = 'bpsc_access_token';
   static const String _refreshTokenKey = 'bpsc_refresh_token';
   static const String _userDataKey = 'bpsc_user_data';

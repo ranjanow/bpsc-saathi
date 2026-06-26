@@ -1,24 +1,31 @@
 # IDE
-
 .vscode/
 .idea/
 
-# Environment files
-
+# Environment files (actual secrets)
 .env
 .env.*
-frontend/lib/env.dart
 
 # Backend build artifacts
-
 backend/tmp_build.exe
 *.exe
 
-# Logs
+# Frontend build artifacts
+frontend/build/
+frontend/.dart_tool/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.packages
 
+# Vercel
+frontend/.vercel/
+
+# Node
+node_modules/
+
+# Logs
 *.log
 
 # OS files
-
 .DS_Store
 Thumbs.db

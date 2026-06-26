@@ -4,16 +4,11 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
+import '../env.dart';
 import '../models/ecosystem_model.dart';
 import '../models/mains_evaluation_model.dart';
 
 /// Service layer for communicating with the Go backend API.
-///
-/// Base URL defaults:
-///   - Web:     http://localhost:8080
-///   - Android: http://10.0.2.2:8080  (emulator loopback)
-///   - iOS:     http://localhost:8080
-///   - Desktop: http://localhost:8080
 class ApiService {
   late final String baseUrl;
   String? _authToken;
@@ -21,6 +16,9 @@ class ApiService {
   ApiService({String? customBaseUrl}) {
     if (customBaseUrl != null) {
       baseUrl = customBaseUrl;
+    } else if (Environment.apiUrl.isNotEmpty) {
+      // Production: use compile-time --dart-define=API_URL=...
+      baseUrl = Environment.apiUrl;
     } else if (kIsWeb) {
       baseUrl = 'http://localhost:8080';
     } else if (Platform.isAndroid) {
@@ -515,6 +513,263 @@ class ApiService {
       );
     }
   }
+
+  // ─── Feature 2: Analytics ─────────────────────────────────────────────
+
+  /// Get analytics dashboard data.
+  Future<Map<String, dynamic>> getAnalyticsDashboard() async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/v1/analytics/dashboard'),
+      headers: _headers,
+    );
+    return json.decode(res.body) as Map<String, dynamic>;
+  }
+
+  /// Get subject progress/mastery.
+  Future<Map<String, dynamic>> getSubjectProgress() async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/v1/analytics/progress'),
+      headers: _headers,
+    );
+    return json.decode(res.body) as Map<String, dynamic>;
+  }
+
+  /// Get streak info.
+  Future<Map<String, dynamic>> getStreak() async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/v1/analytics/streak'),
+      headers: _headers,
+    );
+    return json.decode(res.body) as Map<String, dynamic>;
+  }
+
+  /// Record a quiz attempt for analytics.
+  Future<void> recordQuizAttempt({
+    required String quizType,
+    required String subject,
+    required int totalQuestions,
+    required int correctAnswers,
+    int timeSpentSeconds = 0,
+  }) async {
+    await http.post(
+      Uri.parse('$baseUrl/api/v1/analytics/record-attempt'),
+      headers: _headers,
+      body: json.encode({
+        'quizType': quizType,
+        'subject': subject,
+        'totalQuestions': totalQuestions,
+        'correctAnswers': correctAnswers,
+        'timeSpentSeconds': timeSpentSeconds,
+      }),
+    );
+  }
+
+  // ─── Feature 4/5: AI Tutor Chat + Mentor ────────────────────────────
+
+  /// Get user's chat sessions.
+  Future<List<dynamic>> getChatSessions() async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/v1/tutor-chat/sessions'),
+      headers: _headers,
+    );
+    final data = json.decode(res.body) as Map<String, dynamic>;
+    return data['sessions'] as List<dynamic>? ?? [];
+  }
+
+  /// Create a new chat session.
+  Future<Map<String, dynamic>> createChatSession({
+    String sessionType = 'tutor',
+    String title = 'New Chat',
+  }) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/v1/tutor-chat/sessions'),
+      headers: _headers,
+      body: json.encode({'sessionType': sessionType, 'title': title}),
+    );
+    return json.decode(res.body) as Map<String, dynamic>;
+  }
+
+  /// Get messages for a chat session.
+  Future<List<dynamic>> getChatMessages(String sessionId) async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/v1/tutor-chat/messages?sessionId=$sessionId'),
+      headers: _headers,
+    );
+    final data = json.decode(res.body) as Map<String, dynamic>;
+    return data['messages'] as List<dynamic>? ?? [];
+  }
+
+  /// Send a message in a chat session.
+  Future<Map<String, dynamic>> sendChatMessage({
+    required String sessionId,
+    required String message,
+    String sessionType = 'tutor',
+  }) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/v1/tutor-chat/send'),
+      headers: _headers,
+      body: json.encode({
+        'sessionId': sessionId,
+        'message': message,
+        'sessionType': sessionType,
+      }),
+    );
+    return json.decode(res.body) as Map<String, dynamic>;
+  }
+
+  // ─── Feature 6: Revision Engine ─────────────────────────────────────
+
+  /// Get today's revision items.
+  Future<Map<String, dynamic>> getTodayRevisions() async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/v1/revision/today'),
+      headers: _headers,
+    );
+    return json.decode(res.body) as Map<String, dynamic>;
+  }
+
+  /// Add a topic to revision queue.
+  Future<void> addToRevisionQueue({
+    required String subject,
+    required String topic,
+    String difficulty = 'medium',
+  }) async {
+    await http.post(
+      Uri.parse('$baseUrl/api/v1/revision/add'),
+      headers: _headers,
+      body: json.encode({
+        'subject': subject,
+        'topic': topic,
+        'difficulty': difficulty,
+      }),
+    );
+  }
+
+  /// Complete a revision item with quality rating (0-5).
+  Future<void> completeRevision(String itemId, int quality) async {
+    await http.post(
+      Uri.parse('$baseUrl/api/v1/revision/complete'),
+      headers: _headers,
+      body: json.encode({'itemId': itemId, 'quality': quality}),
+    );
+  }
+
+  // ─── Feature 7: Mock Tests ──────────────────────────────────────────
+
+  /// Get available mock tests.
+  Future<List<dynamic>> getMockTests() async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/v1/mock-tests'),
+      headers: _headers,
+    );
+    final data = json.decode(res.body) as Map<String, dynamic>;
+    return data['tests'] as List<dynamic>? ?? [];
+  }
+
+  /// Start a mock test attempt.
+  Future<Map<String, dynamic>> startMockTest(String mockTestId) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/v1/mock-tests/start'),
+      headers: _headers,
+      body: json.encode({'mockTestId': mockTestId}),
+    );
+    return json.decode(res.body) as Map<String, dynamic>;
+  }
+
+  /// Submit a mock test.
+  Future<Map<String, dynamic>> submitMockTest({
+    required String attemptId,
+    required Map<String, dynamic> answers,
+  }) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/v1/mock-tests/submit'),
+      headers: _headers,
+      body: json.encode({'attemptId': attemptId, 'answers': answers}),
+    );
+    return json.decode(res.body) as Map<String, dynamic>;
+  }
+
+  // ─── Feature 8: Study Planner ───────────────────────────────────────
+
+  /// Get active study plan + today's tasks.
+  Future<Map<String, dynamic>> getStudyPlan() async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/v1/study-plan'),
+      headers: _headers,
+    );
+    return json.decode(res.body) as Map<String, dynamic>;
+  }
+
+  /// Create a new study plan.
+  Future<Map<String, dynamic>> createStudyPlan({
+    String? examDate,
+    double targetHoursPerDay = 4.0,
+    List<String>? subjects,
+  }) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/v1/study-plan'),
+      headers: _headers,
+      body: json.encode({
+        'examDate': examDate,
+        'targetHoursPerDay': targetHoursPerDay,
+        'subjects': subjects ?? ['History', 'Geography', 'Polity', 'Economics', 'Science', 'Current Affairs'],
+      }),
+    );
+    return json.decode(res.body) as Map<String, dynamic>;
+  }
+
+  /// Complete a study task.
+  Future<void> completeStudyTask(String taskId) async {
+    await http.post(
+      Uri.parse('$baseUrl/api/v1/study-plan/complete-task'),
+      headers: _headers,
+      body: json.encode({'taskId': taskId}),
+    );
+  }
+
+  // ─── Feature 9: Notes ───────────────────────────────────────────────
+
+  /// Get user's saved notes.
+  Future<List<dynamic>> getNotes() async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/v1/notes'),
+      headers: _headers,
+    );
+    final data = json.decode(res.body) as Map<String, dynamic>;
+    return data['notes'] as List<dynamic>? ?? [];
+  }
+
+  /// Create a new note.
+  Future<Map<String, dynamic>> createNote({
+    required String title,
+    required String content,
+    String noteType = 'note',
+    String? subject,
+    String? topic,
+    List<String>? tags,
+  }) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/v1/notes'),
+      headers: _headers,
+      body: json.encode({
+        'title': title,
+        'content': content,
+        'noteType': noteType,
+        'subject': subject ?? '',
+        'topic': topic ?? '',
+        'tags': tags ?? [],
+      }),
+    );
+    return json.decode(res.body) as Map<String, dynamic>;
+  }
+
+  /// Delete a note.
+  Future<void> deleteNote(String noteId) async {
+    await http.delete(
+      Uri.parse('$baseUrl/api/v1/notes?id=$noteId'),
+      headers: _headers,
+    );
+  }
 }
 
 /// Custom exception for API errors with status code and body.
@@ -533,3 +788,4 @@ class ApiException implements Exception {
   String toString() =>
       'ApiException($statusCode): $message\nBody: $body';
 }
+

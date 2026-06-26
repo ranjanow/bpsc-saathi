@@ -27,6 +27,7 @@ class _SignupScreenState extends State<SignupScreen>
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+  bool _submitted = false;
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
 
@@ -97,6 +98,7 @@ class _SignupScreenState extends State<SignupScreen>
   }
 
   Future<void> _handleSignup() async {
+    setState(() => _submitted = true);
     if (!_formKey.currentState!.validate()) return;
 
     final auth = context.read<AuthProvider>();
@@ -191,6 +193,9 @@ class _SignupScreenState extends State<SignupScreen>
                     ),
                     child: Form(
                       key: _formKey,
+                      autovalidateMode: _submitted
+                          ? AutovalidateMode.onUserInteraction
+                          : AutovalidateMode.disabled,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
