@@ -21,6 +21,9 @@ class AuthService {
     return 'http://localhost:8080';
   }
 
+  /// The resolved API base URL.
+  String get baseUrl => _baseUrl;
+
   static const String _accessTokenKey = 'bpsc_access_token';
   static const String _refreshTokenKey = 'bpsc_refresh_token';
   static const String _userDataKey = 'bpsc_user_data';

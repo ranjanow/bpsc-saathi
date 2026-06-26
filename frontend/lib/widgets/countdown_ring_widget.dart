@@ -8,13 +8,13 @@ import '../theme/app_theme.dart';
 /// and text labels for days remaining below.
 class CountdownRingWidget extends StatefulWidget {
   final double syllabusPercent; // 0.0 – 1.0
-  final int daysRemaining;
+  final int? daysRemaining;    // null = auto-calculate
   final String examLabel;
 
   const CountdownRingWidget({
     super.key,
-    this.syllabusPercent = 0.68,
-    this.daysRemaining = 42,
+    this.syllabusPercent = 0.0,
+    this.daysRemaining,
     this.examLabel = 'BPSC Prelims',
   });
 
@@ -56,6 +56,11 @@ class _CountdownRingWidgetState extends State<CountdownRingWidget>
   Widget build(BuildContext context) {
     final t = BpscThemeData.of(context);
     final pct = (widget.syllabusPercent * 100).round();
+
+    // Auto-calculate days until next BPSC Prelims if not specified
+    // Next BPSC Prelims expected: December 2026
+    final daysLeft = widget.daysRemaining ?? _calculateDaysUntilExam();
+
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
@@ -113,7 +118,7 @@ class _CountdownRingWidgetState extends State<CountdownRingWidget>
           const SizedBox(height: 14),
           // ── Days remaining ───────────────────────────────────
           Text(
-            '${widget.daysRemaining} days',
+            '$daysLeft days',
             style: TextStyle(
               fontFamily: t.displayFontFamily,
               fontSize: 18,
@@ -141,6 +146,15 @@ class _CountdownRingWidgetState extends State<CountdownRingWidget>
         ],
       ),
     );
+  }
+
+  /// Calculate days until the next BPSC Prelims exam.
+  /// Target date: December 15, 2026 (estimated).
+  int _calculateDaysUntilExam() {
+    final now = DateTime.now();
+    final examDate = DateTime(2026, 12, 15);
+    final diff = examDate.difference(now).inDays;
+    return diff > 0 ? diff : 0;
   }
 }
 

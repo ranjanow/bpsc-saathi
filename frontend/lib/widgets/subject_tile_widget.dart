@@ -14,14 +14,14 @@ class SubjectData {
   });
 }
 
-/// Default BPSC subjects with mock progress.
+/// Default BPSC subjects — fresh start with 0% progress.
 final List<SubjectData> defaultSubjects = [
-  const SubjectData(name: 'Bihar history', icon: Icons.account_balance_rounded, progressPercent: 0.72),
-  const SubjectData(name: 'Indian polity', icon: Icons.gavel_rounded, progressPercent: 0.45),
-  const SubjectData(name: 'Economy', icon: Icons.bar_chart_rounded, progressPercent: 0.60),
-  const SubjectData(name: 'Geography', icon: Icons.public_rounded, progressPercent: 0.38),
-  const SubjectData(name: 'General science', icon: Icons.science_rounded, progressPercent: 0.80),
-  const SubjectData(name: 'Current affairs', icon: Icons.article_rounded, progressPercent: 0.25),
+  const SubjectData(name: 'Bihar history', icon: Icons.account_balance_rounded, progressPercent: 0.0),
+  const SubjectData(name: 'Indian polity', icon: Icons.gavel_rounded, progressPercent: 0.0),
+  const SubjectData(name: 'Economy', icon: Icons.bar_chart_rounded, progressPercent: 0.0),
+  const SubjectData(name: 'Geography', icon: Icons.public_rounded, progressPercent: 0.0),
+  const SubjectData(name: 'General science', icon: Icons.science_rounded, progressPercent: 0.0),
+  const SubjectData(name: 'Current affairs', icon: Icons.article_rounded, progressPercent: 0.0),
 ];
 
 /// A grid of subject progress tiles — "Continue learning" section.

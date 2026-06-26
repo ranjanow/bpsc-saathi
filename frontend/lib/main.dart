@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
@@ -133,6 +134,20 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _selectedIndex = 0;
+  int _streakDays = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStreak();
+  }
+
+  /// Load the current streak from SharedPreferences.
+  Future<void> _loadStreak() async {
+    final prefs = await SharedPreferences.getInstance();
+    final streak = prefs.getInt('streak_days') ?? 0;
+    if (mounted) setState(() => _streakDays = streak);
+  }
 
   static const List<Widget> _screens = [
     DashboardScreen(),       // 0 = Home
@@ -194,7 +209,7 @@ class _AppShellState extends State<AppShell> {
                   AppSidebar(
                     selectedIndex: _selectedIndex,
                     onDestinationSelected: _onDestinationSelected,
-                    streakDays: 12, // TODO: wire to real streak
+                    streakDays: _streakDays,
                   ),
                   Expanded(
                     child: Column(

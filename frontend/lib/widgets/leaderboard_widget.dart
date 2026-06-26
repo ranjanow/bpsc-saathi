@@ -18,13 +18,9 @@ class LeaderboardEntry {
   });
 }
 
-/// Default mock leaderboard data.
+/// Default empty leaderboard — fresh start.
 final List<LeaderboardEntry> defaultLeaderboard = const [
-  LeaderboardEntry(rank: 1, initials: 'RK', name: 'Ravi Kumar', xp: 2480),
-  LeaderboardEntry(rank: 2, initials: 'A', name: 'You', xp: 1240, isCurrentUser: true),
-  LeaderboardEntry(rank: 3, initials: 'SK', name: 'Sunita K.', xp: 1180),
-  LeaderboardEntry(rank: 4, initials: 'MP', name: 'Manish P.', xp: 1050),
-  LeaderboardEntry(rank: 5, initials: 'PD', name: 'Priya D.', xp: 980),
+  LeaderboardEntry(rank: 1, initials: '?', name: 'You', xp: 0, isCurrentUser: true),
 ];
 
 /// Weekly leaderboard card — shows rank, avatar, name, and XP.
@@ -69,6 +65,19 @@ class LeaderboardWidget extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ...data.map((entry) => _LeaderboardRow(entry: entry)),
+          if (data.length <= 1) ...[
+            const SizedBox(height: 12),
+            Center(
+              child: Text(
+                'Start practicing to climb the ranks! 🚀',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: t.textMuted,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

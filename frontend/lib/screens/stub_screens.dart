@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 
 import '../theme/app_theme.dart';
 import '../providers/auth_provider.dart';
-import '../env.dart';
 
 /// Full-featured Profile screen with backend integration.
 ///
@@ -62,6 +61,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
+  /// Resolved API base URL — shared with AuthService.
+  String get _apiBase {
+    final auth = context.read<AuthProvider>();
+    return auth.authService.baseUrl;
+  }
+
+  /// Auth-aware headers for API calls.
+  Map<String, String> get _authHeaders {
+    final auth = context.read<AuthProvider>();
+    return auth.authService.authHeaders;
+  }
+
   Future<void> _fetchProfile() async {
     setState(() {
       _isLoading = true;
@@ -69,17 +80,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     try {
+      // Populate from AuthProvider's cached user data first (instant UI)
+      final auth = context.read<AuthProvider>();
+      _name = auth.displayName;
+      _email = auth.email;
+
       final profileRes = await http.get(
-        Uri.parse('${Environment.apiUrl}/api/v1/profile'),
-        headers: {'Content-Type': 'application/json'},
-      );
+        Uri.parse('$_apiBase/api/v1/profile'),
+        headers: _authHeaders,
+      ).timeout(const Duration(seconds: 10));
 
       if (profileRes.statusCode == 200) {
         final data = json.decode(profileRes.body);
         if (mounted) {
           setState(() {
-            _name = data['name'] ?? '';
-            _email = data['email'] ?? '';
+            _name = data['name'] ?? _name;
+            _email = data['email'] ?? _email;
             _bio = data['bio'] ?? '';
             _targetExam = data['targetExam'] ?? '';
             _preferredLanguage = data['preferredLanguage'] ?? 'both';
@@ -96,19 +112,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           });
         }
       } else {
+        // If backend profile endpoint not ready, show cached auth data
         if (mounted) {
-          setState(() {
-            _error = 'Failed to load profile (${profileRes.statusCode})';
-            _isLoading = false;
-          });
+          setState(() => _isLoading = false);
         }
       }
     } catch (e) {
+      // Graceful fallback — show what we have from auth
       if (mounted) {
-        setState(() {
-          _error = 'Connection error: $e';
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -129,8 +141,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final res = await http.put(
-        Uri.parse('${Environment.apiUrl}/api/v1/profile'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('$_apiBase/api/v1/profile'),
+        headers: _authHeaders,
         body: json.encode(updates),
       );
 

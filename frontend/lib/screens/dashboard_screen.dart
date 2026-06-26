@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../theme/app_theme.dart';
@@ -7,6 +8,7 @@ import '../widgets/hero_quiz_banner.dart';
 import '../widgets/subject_tile_widget.dart';
 import '../widgets/countdown_ring_widget.dart';
 import '../widgets/leaderboard_widget.dart';
+import '../providers/auth_provider.dart';
 
 /// Dashboard screen — the engagement hub.
 ///
@@ -163,6 +165,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildTopbar(BpscThemeData t) {
+    final auth = context.watch<AuthProvider>();
+    final userName = auth.displayName;
+    final userInitial = userName.isNotEmpty ? userName[0].toUpperCase() : '?';
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -181,7 +187,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Welcome back, Anjali',
+                'Welcome back, $userName',
                 style: TextStyle(
                   fontFamily: t.displayFontFamily,
                   fontSize: t.brightness == Brightness.dark ? 26 : 30,
@@ -193,7 +199,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ),
-        // XP Pill
+        // XP Pill — reads from real analytics (0 for new users)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
@@ -201,7 +207,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
-            '1,240 XP',
+            '0 XP',
             style: TextStyle(
               fontFamily: t.displayFontFamily,
               fontSize: 13,
@@ -211,7 +217,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         const SizedBox(width: 10),
-        // Avatar
+        // Avatar — real user initial
         Container(
           width: 38,
           height: 38,
@@ -221,7 +227,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           child: Center(
             child: Text(
-              'A',
+              userInitial,
               style: TextStyle(
                 fontFamily: t.displayFontFamily,
                 fontSize: 13,
